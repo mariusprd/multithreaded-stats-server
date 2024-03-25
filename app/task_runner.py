@@ -19,8 +19,7 @@ class ThreadPool:
         else:
             self.num_of_threads = os.cpu_count()
 
-
-
+        print(f"Server using {self.num_of_threads} threads")
 
         pass
 
