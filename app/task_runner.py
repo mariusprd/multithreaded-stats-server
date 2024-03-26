@@ -3,7 +3,6 @@ from queue import Queue
 from threading import Thread, Event
 import time
 
-
 class ThreadPool:
     def __init__(self):
         # You must implement a ThreadPool of TaskRunners
@@ -25,7 +24,8 @@ class ThreadPool:
         self.task_queue = Queue()
 
         self.threads = [TaskRunner(i, self.task_queue, self.task_state, self.data_loaded) for i in range(self.num_of_threads)]
-        map(lambda t: t.start(), self.threads)
+        for i in range(self.num_of_threads):
+            self.threads[i].start()
 
     def add_task(self, task, job_id) -> int:
         '''adds task to queue and task_state'''
@@ -45,10 +45,12 @@ class ThreadPool:
     def graceful_shutdown(self) -> None:
         '''ThreadPool shutdown'''
         for thread in self.threads:
-            self.task_queue.put(None)
+            self.task_queue.put((None, None))
 
         for thread in self.threads:
             thread.join()
+
+        print("THREADPOOL SHUTDOWN!!!")
 
     def is_valid(self, job_id) -> bool:
         '''Checks if job_id is valid'''
@@ -66,7 +68,7 @@ class TaskRunner(Thread):
     def run(self):
         # wait for data to process
         self.data_loaded.wait()
-        print(f"Started TaskRunner num {self.therad_id}")
+        print(f"Started TaskRunner num {self.thread_id}")
 
         while True:
             # TODO

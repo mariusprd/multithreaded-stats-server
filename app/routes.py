@@ -54,7 +54,6 @@ def states_mean_request():
     # Register job. Don't wait for task to finish
     # Increment job_id counter
     # Return associated job_id
-
     webserver.tasks_runner.add_task(data, webserver.job_counter)
     webserver.job_counter += 1
     return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
@@ -142,9 +141,9 @@ def state_mean_by_category_request():
 
 @webserver.route('/api/graceful_shutdown', methods=['GET'])
 def graceful_shutdown():
-    # TODO
     # Gracefully shutdown the webserver
-    return jsonify({"status": "NotImplemented"})
+    webserver.tasks_runner.graceful_shutdown()
+    return jsonify({"status": "success"})
 
 # You can check localhost in your browser to see what this displays
 @webserver.route('/')

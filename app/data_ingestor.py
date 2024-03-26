@@ -12,7 +12,7 @@ class DataIngestor:
         self.data = pd.read_csv(csv_path)
         print(f"Finished reading data")
         self.data_loaded.set()
-        
+
         print(self.data.head())
 
         self.questions_best_is_min = [
@@ -29,3 +29,4 @@ class DataIngestor:
             'Percent of adults who achieve at least 300 minutes a week of moderate-intensity aerobic physical activity or 150 minutes a week of vigorous-intensity aerobic activity (or an equivalent combination)',
             'Percent of adults who engage in muscle-strengthening activities on 2 or more days a week',
         ]
+
