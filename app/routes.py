@@ -25,8 +25,14 @@ def post_endpoint():
 @webserver.route('/api/get_results/<job_id>', methods=['GET'])
 def get_response(job_id):
     print(f"JobID is {job_id}")
-    # TODO
+
     # Check if job_id is valid
+    if not webserver.tasks_runner.is_valid(job_id):
+        return jsonify({'status': 'invalid job_id'})
+    
+    # Check if job_id is done
+    if not webserver.tasks_runner.is_done(job_id):
+        return jsonify({'status': 'running'})
 
     # Check if job_id is done and return the result
     #    res = res_for(job_id)
@@ -49,7 +55,9 @@ def states_mean_request():
     # Increment job_id counter
     # Return associated job_id
 
-    return jsonify({"status": "NotImplemented"})
+    webserver.tasks_runner.add_task(data, webserver.job_counter)
+    webserver.job_counter += 1
+    return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
 
 @webserver.route('/api/state_mean', methods=['POST'])
 def state_mean_request():
@@ -130,6 +138,12 @@ def state_mean_by_category_request():
     # Increment job_id counter
     # Return associated job_id
 
+    return jsonify({"status": "NotImplemented"})
+
+@webserver.route('/api/graceful_shutdown', methods=['GET'])
+def graceful_shutdown():
+    # TODO
+    # Gracefully shutdown the webserver
     return jsonify({"status": "NotImplemented"})
 
 # You can check localhost in your browser to see what this displays

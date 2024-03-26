@@ -1,6 +1,6 @@
 import os
 from queue import Queue
-from threading import Thread, Lock, Event
+from threading import Thread, Event
 import time
 
 
@@ -24,43 +24,41 @@ class ThreadPool:
         self.task_state = {}
         self.task_queue = Queue()
 
-        self.current_job_id = 0
+        self.threads = [TaskRunner(i, self.task_queue, self.task_state, self.data_loaded) for i in range(self.num_of_threads)]
+        map(lambda t: t.start(), self.threads)
 
-        self.threads = []
-        for i in range(self.num_of_threads):
-            self.threads.append(TaskRunner(i, self.task_queue, self.task_state, self.data_loaded))
-            self.threads[i].start()
+    def add_task(self, task, job_id) -> int:
+        '''adds task to queue and task_state'''
+        self.task_queue.put((task, job_id))
+        self.task_state[f"job_id_{job_id}"] = "running"
 
+        return job_id
 
-    def add_task(self, task):
-        self.task_queue.put(task)
-        self.current_job_id += 1
-        job_id = f"job_id_{self.current_job_id}"
-        self.task_state[job_id] = "running"
-
-        return self.current_job_id
-
-
-    def get_num_jobs(self):
+    def get_num_jobs(self) -> int:
+        '''Returns the number of jobs in the queue'''
         return self.task_queue.qsize()
-    
 
-    def get_jobs(self):
+    def get_jobs(self) -> list:
+        '''Returns job states'''
         return list(self.task_state.items())
 
-
-    def graceful_shutdown(self):
+    def graceful_shutdown(self) -> None:
+        '''ThreadPool shutdown'''
         for thread in self.threads:
             self.task_queue.put(None)
 
         for thread in self.threads:
             thread.join()
 
+    def is_valid(self, job_id) -> bool:
+        '''Checks if job_id is valid'''
+        return f"job_id_{job_id}" in self.task_state
+
+
 class TaskRunner(Thread):
     def __init__(self, thread_id: int, task_queue: Queue, task_state: dict, data_loaded: Event):
-        # TODO: init necessary data structures
         super().__init__()
-        self.therad_id = thread_id
+        self.thread_id = thread_id
         self.task_queue = task_queue
         self.task_state = task_state
         self.data_loaded = data_loaded
@@ -75,6 +73,16 @@ class TaskRunner(Thread):
             # Get pending job
             # Execute the job and save the result to disk
             # Repeat until graceful_shutdown
-            task = self.task_queue.get()
-            if task is None: break
+            job_id, job = self.task_queue.get()
+            if job is None: break
+
+            # Execute the job
+
+            # Save the result to disk
+
+            # Update the task state
+            self.task_state[f"job_id_{job_id}"] = "done"
+
+
+
 
