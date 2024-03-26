@@ -1,7 +1,8 @@
 import os
 from queue import Queue
-from threading import Thread, Event
+import threading
 import time
+from . import webserver
 
 class ThreadPool:
     def __init__(self):
@@ -21,9 +22,24 @@ class ThreadPool:
 
         print(f"Server using {self.num_of_threads} threads")
 
-        pass
+        self.task_state = {}
+        self.task_queue = Queue()
+        self.job_id_lock = threading.Lock()
 
-class TaskRunner(Thread):
+        self.threads = []
+        for i in range(self.num_of_threads):
+            self.threads.append(TaskRunner())
+            self.threads[i].start()
+
+    def add_task(self, task):
+        self.task_queue.put(task)
+        with self.job_id_lock:
+            webserver.job_counter += 1
+            job_id = webserver.job_counter
+            self.task_state[job_id] = "running"
+        return job_id - 1
+
+class TaskRunner(threading.Thread):
     def __init__(self):
         # TODO: init necessary data structures
         pass

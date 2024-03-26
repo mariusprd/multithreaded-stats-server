@@ -7,7 +7,7 @@ class DataIngestor:
     def __init__(self, csv_path: str):
         # TODO: Read csv from csv_path
         print(f"Started reading {csv_path}")
-        self.data = pd.read_csv(csv_path, usecols=["Question", "Data_Value"])
+        self.data = pd.read_csv(csv_path)
         print(self.data.head())
 
         self.questions_best_is_min = [
