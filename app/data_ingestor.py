@@ -1,13 +1,18 @@
 import os
 import json
 import pandas as pd
+from threading import Event
 
 
 class DataIngestor:
-    def __init__(self, csv_path: str):
-        # TODO: Read csv from csv_path
-        print(f"Started reading {csv_path}")
+    def __init__(self, csv_path: str, data_loaded: Event):
+        self.data_loaded = data_loaded
+
+        # Read csv from csv_path
         self.data = pd.read_csv(csv_path)
+        print(f"Finished reading data")
+        self.data_loaded.set()
+        
         print(self.data.head())
 
         self.questions_best_is_min = [
