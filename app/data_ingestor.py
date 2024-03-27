@@ -28,9 +28,27 @@ class DataIngestor:
             'Percent of adults who engage in muscle-strengthening activities on 2 or more days a week',
         ]
 
+    def global_mean(self, question: str):
+        def inner():
+            res =  self.data[self.data['Question'] == question]['Data_Value'].mean()
+            return json.dumps({"global_mean": res})
+        
+        return inner
+        
+
     def states_mean(self, question: str):
         def inner():
             ascending = question in self.questions_best_is_min
-            return self.data[self.data['Question'] == question].groupby('LocationDesc')['Data_Value'].mean().sort_values(ascending=ascending).to_json()
+            res =  self.data[self.data['Question'] == question].groupby('LocationDesc')['Data_Value'].mean().sort_values(ascending=ascending)
+            return json.dumps(res.to_dict())
         
         return inner
+    
+    def state_mean(self, question: str, state: str):
+        def inner():
+            res = self.data[(self.data['Question'] == question) & (self.data['LocationDesc'] == state)]['Data_Value'].mean()
+            return json.dumps({state: res})
+        
+        return inner
+    
+    
