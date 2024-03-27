@@ -44,6 +44,7 @@ class DataIngestor:
         
         return inner
     
+
     def state_mean(self, question: str, state: str):
         def inner():
             res = self.data[(self.data['Question'] == question) & (self.data['LocationDesc'] == state)]['Data_Value'].mean()
@@ -51,6 +52,7 @@ class DataIngestor:
         
         return inner
     
+
     def best5(self, question: str):
         def inner():
             ascending = question in self.questions_best_is_min
@@ -59,6 +61,7 @@ class DataIngestor:
         
         return inner
     
+
     def worst5(self, question: str):
         def inner():
             ascending = question in self.questions_best_is_min
@@ -66,5 +69,28 @@ class DataIngestor:
             return json.dumps(res.to_dict())
         
         return inner
+    
+
+    def diff_from_mean(self, question: str):
+        def inner():
+            ascending = question in self.questions_best_is_min
+            global_mean = self.data[self.data['Question'] == question]['Data_Value'].mean()
+            states_mean =  self.data[self.data['Question'] == question].groupby('LocationDesc')['Data_Value'].mean().sort_values(ascending=ascending)
+            res = global_mean - states_mean
+            return json.dumps(res.to_dict())
+            
+        return inner
+    
+
+    def state_diff_from_mean(self, question: str, state: str):
+        def inner():
+            global_mean = self.data[self.data['Question'] == question]['Data_Value'].mean()
+            state_mean = self.data[(self.data['Question'] == question) & (self.data['LocationDesc'] == state)]['Data_Value'].mean()
+            res = global_mean - state_mean
+            return json.dumps({state: res})
+        
+        return inner
+    
+
     
     
