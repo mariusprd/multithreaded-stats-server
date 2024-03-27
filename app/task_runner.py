@@ -5,27 +5,23 @@ import time
 
 class ThreadPool:
     def __init__(self):
-        # You must implement a ThreadPool of TaskRunners
-        # Your ThreadPool should check if an environment variable TP_NUM_OF_THREADS is defined
-        # If the env var is defined, that is the number of threads to be used by the thread pool
-        # Otherwise, you are to use what the hardware concurrency allows
-        # You are free to write your implementation as you see fit, but
-        # You must NOT:
-        #   * create more threads than the hardware concurrency allows
-        #   * recreate threads for each task
-
+        # set number of threads
         self.num_of_threads = int(os.environ['TP_NUM_OF_THREADS']) if 'TP_NUM_OF_THREADS' in os.environ else os.cpu_count()
-        print(f"Server using {self.num_of_threads} threads")
 
         # var to notify that the data was loaded
         self.data_loaded = Event()
 
+        # task management
         self.task_state = {}
         self.task_queue = Queue()
 
         self.threads = [TaskRunner(i, self.task_queue, self.task_state, self.data_loaded) for i in range(self.num_of_threads)]
         for i in range(self.num_of_threads):
             self.threads[i].start()
+
+        # create the result directory if it doesn't exist
+        if not os.path.exists("./results"):
+            os.makedirs("./results")
 
     def add_task(self, task, job_id) -> int:
         '''adds task to queue and task_state'''
@@ -50,15 +46,22 @@ class ThreadPool:
         for thread in self.threads:
             thread.join()
 
+        # remove the results directory
+        os.rmdir("./results")
+
         print("THREADPOOL SHUTDOWN!!!")
 
     def is_valid(self, job_id) -> bool:
         '''Checks if job_id is valid'''
         return f"job_id_{job_id}" in self.task_state
+    
+    def is_done(self, job_id) -> bool:
+        '''Checks if job is done'''
+        return self.task_state[f"job_id_{job_id}"] == "done"
 
 
 class TaskRunner(Thread):
-    def __init__(self, thread_id: int, task_queue: Queue, task_state: dict, data_loaded: Event):
+    def __init__(self, thread_id: int, task_queue: Queue, task_state: dict, data_loaded: Event, data_ingestor=None):
         super().__init__()
         self.thread_id = thread_id
         self.task_queue = task_queue
@@ -68,19 +71,20 @@ class TaskRunner(Thread):
     def run(self):
         # wait for data to process
         self.data_loaded.wait()
-        print(f"Started TaskRunner num {self.thread_id}")
 
         while True:
-            # TODO
-            # Get pending job
-            # Execute the job and save the result to disk
-            # Repeat until graceful_shutdown
-            job_id, job = self.task_queue.get()
-            if job is None: break
+            # Get the task
+            task, job_id = self.task_queue.get()
+            if task is None: break
 
             # Execute the job
+            result = task()
+            print(f"TaskRunner {self.thread_id} - JobID {job_id} - Result {result}")
+            print("\n\n")
 
             # Save the result to disk
+            with open(f"./results/job_{job_id}", "w") as f:
+                f.write(result)
 
             # Update the task state
             self.task_state[f"job_id_{job_id}"] = "done"

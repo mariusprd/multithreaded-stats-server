@@ -40,21 +40,22 @@ def get_response(job_id):
     #        'status': 'done',
     #        'data': res
     #    })
-
-    # If not, return running status
-    return jsonify({'status': 'NotImplemented'})
+    with open(f"./results/job_{job_id}", "r") as f:
+        res = f.read()
+    return jsonify({'status': 'done', 'data': res})
 
 @webserver.route('/api/states_mean', methods=['POST'])
 def states_mean_request():
     # Get request data
     data = request.json
-    print(f"Got request {data}")
+    # print(f"Got request {data}")
 
     # TODO
     # Register job. Don't wait for task to finish
     # Increment job_id counter
     # Return associated job_id
-    webserver.tasks_runner.add_task(data, webserver.job_counter)
+    job = webserver.data_ingestor.states_mean(data['question'])
+    webserver.tasks_runner.add_task(job, webserver.job_counter)
     webserver.job_counter += 1
     return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
 

@@ -13,8 +13,6 @@ class DataIngestor:
         print(f"Finished reading data")
         self.data_loaded.set()
 
-        print(self.data.head())
-
         self.questions_best_is_min = [
             'Percent of adults aged 18 years and older who have an overweight classification',
             'Percent of adults aged 18 years and older who have obesity',
@@ -30,3 +28,9 @@ class DataIngestor:
             'Percent of adults who engage in muscle-strengthening activities on 2 or more days a week',
         ]
 
+    def states_mean(self, question: str):
+        def inner():
+            ascending = question in self.questions_best_is_min
+            return self.data[self.data['Question'] == question].groupby('LocationDesc')['Data_Value'].mean().sort_values(ascending=ascending).to_json()
+        
+        return inner
