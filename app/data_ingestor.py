@@ -51,4 +51,20 @@ class DataIngestor:
         
         return inner
     
+    def best5(self, question: str):
+        def inner():
+            ascending = question in self.questions_best_is_min
+            res = self.data[self.data['Question'] == question].groupby('LocationDesc')['Data_Value'].mean().sort_values(ascending=ascending).head(5)
+            return json.dumps(res.to_dict())
+        
+        return inner
+    
+    def worst5(self, question: str):
+        def inner():
+            ascending = question in self.questions_best_is_min
+            res = self.data[self.data['Question'] == question].groupby('LocationDesc')['Data_Value'].mean().sort_values(ascending=not ascending).head(5)
+            return json.dumps(res.to_dict())
+        
+        return inner
+    
     

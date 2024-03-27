@@ -73,24 +73,26 @@ def state_mean_request():
 
 @webserver.route('/api/best5', methods=['POST'])
 def best5_request():
-    # TODO
     # Get request data
-    # Register job. Don't wait for task to finish
-    # Increment job_id counter
-    # Return associated job_id
+    data = request.json
 
-    return jsonify({"status": "NotImplemented"})
+    job = webserver.data_ingestor.best5(data['question'])
+    webserver.tasks_runner.add_task(job, webserver.job_counter)
+    webserver.job_counter += 1
+    
+    return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
 
 
 @webserver.route('/api/worst5', methods=['POST'])
 def worst5_request():
-    # TODO
     # Get request data
-    # Register job. Don't wait for task to finish
-    # Increment job_id counter
-    # Return associated job_id
+    data = request.json
 
-    return jsonify({"status": "NotImplemented"})
+    job = webserver.data_ingestor.worst5(data['question'])
+    webserver.tasks_runner.add_task(job, webserver.job_counter)
+    webserver.job_counter += 1
+    
+    return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
 
 
 @webserver.route('/api/global_mean', methods=['POST'])
