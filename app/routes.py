@@ -25,8 +25,6 @@ def post_endpoint():
 
 @webserver.route('/api/get_results/<job_id>', methods=['GET'])
 def get_response(job_id):
-    print(f"JobID is {job_id}")
-
     # Check if job_id is valid
     if not webserver.tasks_runner.is_valid(job_id):
         return jsonify({'status': 'error', 'reason': 'Invalid job_id'})
@@ -36,11 +34,7 @@ def get_response(job_id):
         return jsonify({'status': 'running'})
 
     with open(f"./results/job_{job_id}", "r") as f:
-        res = f.read()
-
-    res = json.loads(res)
-
-    # print(f"Res for job_id {job_id} is {res}")
+        res = json.loads(f.read())
 
     return jsonify({'status': 'done', 'data': res})
 
@@ -133,24 +127,26 @@ def state_diff_from_mean_request():
 
 @webserver.route('/api/mean_by_category', methods=['POST'])
 def mean_by_category_request():
-    # TODO
     # Get request data
-    # Register job. Don't wait for task to finish
-    # Increment job_id counter
-    # Return associated job_id
+    data = request.json
 
-    return jsonify({"status": "NotImplemented"})
+    job = webserver.data_ingestor.mean_by_category(data['question'])
+    webserver.tasks_runner.add_task(job, webserver.job_counter)
+    webserver.job_counter += 1
+
+    return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
 
 
 @webserver.route('/api/state_mean_by_category', methods=['POST'])
 def state_mean_by_category_request():
-    # TODO
     # Get request data
-    # Register job. Don't wait for task to finish
-    # Increment job_id counter
-    # Return associated job_id
+    data = request.json
 
-    return jsonify({"status": "NotImplemented"})
+    job = webserver.data_ingestor.state_mean_by_category(data['question'], data['state'])
+    webserver.tasks_runner.add_task(job, webserver.job_counter)
+    webserver.job_counter += 1
+
+    return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
 
 
 @webserver.route('/api/graceful_shutdown', methods=['GET'])

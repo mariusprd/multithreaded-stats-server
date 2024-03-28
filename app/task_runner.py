@@ -79,8 +79,6 @@ class TaskRunner(Thread):
 
             # Execute the job
             result = task()
-            print(f"TaskRunner {self.thread_id}  ran job_{job_id} => {result}")
-            print("\n\n")
 
             # Save the result to disk
             with open(f"./results/job_{job_id}", "w") as f:

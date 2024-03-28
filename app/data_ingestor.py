@@ -10,7 +10,6 @@ class DataIngestor:
 
         # Read csv from csv_path
         self.data = pd.read_csv(csv_path)
-        print(f"Finished reading data")
         self.data_loaded.set()
 
         self.questions_best_is_min = [
@@ -28,7 +27,8 @@ class DataIngestor:
             'Percent of adults who engage in muscle-strengthening activities on 2 or more days a week',
         ]
 
-    def global_mean(self, question: str):
+
+    def global_mean(self, question: str) -> str:
         def inner():
             res =  self.data[self.data['Question'] == question]['Data_Value'].mean()
             return json.dumps({"global_mean": res})
@@ -36,7 +36,7 @@ class DataIngestor:
         return inner
         
 
-    def states_mean(self, question: str):
+    def states_mean(self, question: str) -> str:
         def inner():
             ascending = question in self.questions_best_is_min
             res =  self.data[self.data['Question'] == question].groupby('LocationDesc')['Data_Value'].mean().sort_values(ascending=ascending)
@@ -45,7 +45,7 @@ class DataIngestor:
         return inner
     
 
-    def state_mean(self, question: str, state: str):
+    def state_mean(self, question: str, state: str) -> str:
         def inner():
             res = self.data[(self.data['Question'] == question) & (self.data['LocationDesc'] == state)]['Data_Value'].mean()
             return json.dumps({state: res})
@@ -53,7 +53,7 @@ class DataIngestor:
         return inner
     
 
-    def best5(self, question: str):
+    def best5(self, question: str) -> str:
         def inner():
             ascending = question in self.questions_best_is_min
             res = self.data[self.data['Question'] == question].groupby('LocationDesc')['Data_Value'].mean().sort_values(ascending=ascending).head(5)
@@ -62,7 +62,7 @@ class DataIngestor:
         return inner
     
 
-    def worst5(self, question: str):
+    def worst5(self, question: str) -> str:
         def inner():
             ascending = question in self.questions_best_is_min
             res = self.data[self.data['Question'] == question].groupby('LocationDesc')['Data_Value'].mean().sort_values(ascending=not ascending).head(5)
@@ -71,7 +71,7 @@ class DataIngestor:
         return inner
     
 
-    def diff_from_mean(self, question: str):
+    def diff_from_mean(self, question: str) -> str:
         def inner():
             ascending = question in self.questions_best_is_min
             global_mean = self.data[self.data['Question'] == question]['Data_Value'].mean()
@@ -82,7 +82,7 @@ class DataIngestor:
         return inner
     
 
-    def state_diff_from_mean(self, question: str, state: str):
+    def state_diff_from_mean(self, question: str, state: str) -> str:
         def inner():
             global_mean = self.data[self.data['Question'] == question]['Data_Value'].mean()
             state_mean = self.data[(self.data['Question'] == question) & (self.data['LocationDesc'] == state)]['Data_Value'].mean()
@@ -90,7 +90,22 @@ class DataIngestor:
             return json.dumps({state: res})
         
         return inner
-    
 
-    
+
+    def state_mean_by_category(self, question: str, state: str) -> str:
+        def inner():
+            data_for_state = self.data[(self.data['Question'] == question) & (self.data['LocationDesc'] == state)]
+            res = data_for_state.groupby(['StratificationCategory1', 'Stratification1'])['Data_Value'].mean().to_dict()
+            return json.dumps({state: json.dumps({str(tuple([k1, k2])): v for (k1, k2), v in res.items()})})
+
+        return inner
+
+
+    def mean_by_category(self, question: str) -> str:
+        def inner():
+            data_for_state = self.data[(self.data['Question'] == question)]
+            res = data_for_state.groupby(['LocationDesc', 'StratificationCategory1', 'Stratification1'])['Data_Value'].mean().sort_index(level=0).to_dict()
+            return json.dumps({str(tuple([k0, k1, k2])): v for (k0, k1, k2), v in res.items()})
+        
+        return inner
     
