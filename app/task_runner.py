@@ -6,7 +6,10 @@ import time
 class ThreadPool:
     def __init__(self):
         # set number of threads
-        self.num_of_threads = int(os.environ['TP_NUM_OF_THREADS']) if 'TP_NUM_OF_THREADS' in os.environ else os.cpu_count()
+        self.num_of_threads = (
+            int(os.environ['TP_NUM_OF_THREADS']) if 'TP_NUM_OF_THREADS' in os.environ
+            else os.cpu_count()
+        )
 
         # var to notify that the data was loaded
         self.data_loaded = Event()
@@ -15,7 +18,10 @@ class ThreadPool:
         self.task_state = {}
         self.task_queue = Queue()
 
-        self.threads = [TaskRunner(i, self.task_queue, self.task_state, self.data_loaded) for i in range(self.num_of_threads)]
+        self.threads = [
+            TaskRunner(i, self.task_queue, self.task_state, self.data_loaded)
+            for i in range(self.num_of_threads)
+        ]
         for i in range(self.num_of_threads):
             self.threads[i].start()
 
@@ -54,15 +60,21 @@ class ThreadPool:
     def is_valid(self, job_id) -> bool:
         '''Checks if job_id is valid'''
         return f"job_id_{job_id}" in self.task_state
-    
+
     def is_done(self, job_id) -> bool:
         '''Checks if job is done'''
         return self.task_state[f"job_id_{job_id}"] == "done"
 
 
 class TaskRunner(Thread):
-    def __init__(self, thread_id: int, task_queue: Queue, task_state: dict, data_loaded: Event, data_ingestor=None):
-        super().__init__()
+    def __init__(
+        self,
+        thread_id: int,
+        task_queue: Queue,
+        task_state: dict,
+        data_loaded: Event,
+    ):
+        Thread.__init__(self)
         self.thread_id = thread_id
         self.task_queue = task_queue
         self.task_state = task_state
@@ -75,18 +87,15 @@ class TaskRunner(Thread):
         while True:
             # Get the task
             task, job_id = self.task_queue.get()
-            if task is None: break
+            if task is None:
+                break
 
             # Execute the job
             result = task()
 
             # Save the result to disk
-            with open(f"./results/job_{job_id}", "w") as f:
+            with open(f"./results/job_{job_id}", "w", encoding="utf-8") as f:
                 f.write(result)
 
             # Update the task state
             self.task_state[f"job_id_{job_id}"] = "done"
-
-
-
-
