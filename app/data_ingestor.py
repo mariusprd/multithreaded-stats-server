@@ -164,13 +164,21 @@ class DataIngestor:
 
     def state_mean_by_category(self, question: str, state: str) -> str:
         '''
-            Receives a question (from the set of questions above) and a state, and calculates the average
-            value for each segment (Stratification1) from the categories (StratificationCategory1).
+            Receives a question (from the set of questions above) and a state, and calculates
+            the average value for each segment (Stratification1)
+            from the categories (StratificationCategory1).
         '''
         def inner():
-            data_for_state = self.data[(self.data['Question'] == question) & (self.data['LocationDesc'] == state)]
-            res = data_for_state.groupby(['StratificationCategory1', 'Stratification1'])['Data_Value'].mean().to_dict()
-            return json.dumps({state: json.dumps({str(tuple([k1, k2])): v for (k1, k2), v in res.items()})})
+            res = (
+                self.data[
+                    (self.data['Question'] == question) &
+                    (self.data['LocationDesc'] == state)
+                ].groupby(['StratificationCategory1', 'Stratification1'])
+                ['Data_Value'].mean()
+                .to_dict()
+            )
+            res = {str(tuple([k1, k2])): v for (k1, k2), v in res.items()}
+            return json.dumps({state: json.dumps(res)})
 
         return inner
 
@@ -182,8 +190,13 @@ class DataIngestor:
             of each state.
         '''
         def inner():
-            data_for_state = self.data[(self.data['Question'] == question)]
-            res = data_for_state.groupby(['LocationDesc', 'StratificationCategory1', 'Stratification1'])['Data_Value'].mean().sort_index(level=0).to_dict()
+            res = (
+                self.data[(self.data['Question'] == question)]
+                .groupby(['LocationDesc', 'StratificationCategory1', 'Stratification1'])
+                ['Data_Value'].mean()
+                .sort_index(level=0)
+                .to_dict()
+            )
             return json.dumps({str(tuple([k0, k1, k2])): v for (k0, k1, k2), v in res.items()})
 
         return inner
