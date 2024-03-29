@@ -1,9 +1,11 @@
 import os
 from queue import Queue
 from threading import Thread, Event
-import time
 
 class ThreadPool:
+    '''
+        This class is responsible for managing the task execution in a thread pool.
+    '''
     def __init__(self):
         # set number of threads
         self.num_of_threads = (
@@ -28,6 +30,7 @@ class ThreadPool:
         # create the result directory if it doesn't exist
         if not os.path.exists("./results"):
             os.makedirs("./results")
+
 
     def add_task(self, task, job_id) -> int:
         '''adds task to queue and task_state'''
@@ -55,8 +58,6 @@ class ThreadPool:
         # remove the results directory
         os.rmdir("./results")
 
-        print("THREADPOOL SHUTDOWN!!!")
-
     def is_valid(self, job_id) -> bool:
         '''Checks if job_id is valid'''
         return f"job_id_{job_id}" in self.task_state
@@ -67,6 +68,9 @@ class ThreadPool:
 
 
 class TaskRunner(Thread):
+    '''
+        This class is responsible for executing tasks in the ThreadPool.
+    '''
     def __init__(
         self,
         thread_id: int,

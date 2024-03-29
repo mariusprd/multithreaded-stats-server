@@ -1,9 +1,7 @@
-import os
 import json
 
 from flask import request, jsonify
 from app import webserver
-
 
 # Example endpoint definition
 @webserver.route('/api/post_endpoint', methods=['POST'])
@@ -31,15 +29,20 @@ def get_response(job_id):
     '''
         Returns the result of a job given a job_id
     '''
+    webserver.logger.info(f"Getting response for job_id: {job_id}")
+
     if not webserver.tasks_runner.is_valid(job_id):
+        webserver.logger.error(f"Invalid job_id: {job_id}")
         return jsonify({'status': 'error', 'reason': 'Invalid job_id'})
 
     if not webserver.tasks_runner.is_done(job_id):
+        webserver.logger.info(f"Job {job_id} is still running")
         return jsonify({'status': 'running'})
 
     with open(f"./results/job_{job_id}", "r", encoding="utf-8") as f:
         res = json.loads(f.read())
 
+    webserver.logger.info(f"Returning response for job_id: {job_id}")
     return jsonify({'status': 'done', 'data': res})
 
 
@@ -50,12 +53,18 @@ def states_mean_request():
     '''
     # Get request data
     data = request.json
+    webserver.logger.info(f"Received request: {data}")
 
     # add task to execution
-    job = webserver.data_ingestor.states_mean(data['question'])
-    webserver.tasks_runner.add_task(job, webserver.job_counter)
-    webserver.job_counter += 1
+    try:
+        job = webserver.data_ingestor.states_mean(data['question'])
+        webserver.tasks_runner.add_task(job, webserver.job_counter)
+        webserver.job_counter += 1
+    except KeyError as e:
+        webserver.logger.error(f"Invalid format of {data}")
+        return jsonify({"status": "error", "reason": f"Invalid format of {data}"})
 
+    webserver.logger.info(f"Job {webserver.job_counter - 1} added to the queue")
     return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
 
 
@@ -66,12 +75,18 @@ def state_mean_request():
     '''
     # Get request data
     data = request.json
+    webserver.logger.info(f"Received request: {data}")
 
     # add task to execution
-    job = webserver.data_ingestor.state_mean(data['question'], data['state'])
-    webserver.tasks_runner.add_task(job, webserver.job_counter)
-    webserver.job_counter += 1
+    try:
+        job = webserver.data_ingestor.state_mean(data['question'], data['state'])
+        webserver.tasks_runner.add_task(job, webserver.job_counter)
+        webserver.job_counter += 1
+    except KeyError as e:
+        webserver.logger.error(f"Invalid format of {data}")
+        return jsonify({"status": "error", "reason": f"Invalid format of {data}"})
 
+    webserver.logger.info(f"Job {webserver.job_counter - 1} added to the queue")
     return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
 
 
@@ -82,10 +97,15 @@ def best5_request():
     '''
     # Get request data
     data = request.json
+    webserver.logger.info(f"Received request: {data}")
 
-    job = webserver.data_ingestor.best5(data['question'])
-    webserver.tasks_runner.add_task(job, webserver.job_counter)
-    webserver.job_counter += 1
+    try:
+        job = webserver.data_ingestor.best5(data['question'])
+        webserver.tasks_runner.add_task(job, webserver.job_counter)
+        webserver.job_counter += 1
+    except KeyError as e:
+        webserver.logger.error(f"Invalid format of {data}")
+        return jsonify({"status": "error", "reason": f"Invalid format of {data}"})
 
     return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
 
@@ -97,11 +117,17 @@ def worst5_request():
     '''
     # Get request data
     data = request.json
+    webserver.logger.info(f"Received request: {data}")
 
-    job = webserver.data_ingestor.worst5(data['question'])
-    webserver.tasks_runner.add_task(job, webserver.job_counter)
-    webserver.job_counter += 1
+    try:
+        job = webserver.data_ingestor.worst5(data['question'])
+        webserver.tasks_runner.add_task(job, webserver.job_counter)
+        webserver.job_counter += 1
+    except KeyError as e:
+        webserver.logger.error(f"Invalid format of {data}")
+        return jsonify({"status": "error", "reason": f"Invalid format of {data}"})
 
+    webserver.logger.info(f"Job {webserver.job_counter - 1} added to the queue")
     return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
 
 
@@ -112,11 +138,17 @@ def global_mean_request():
     '''
     # Get request data
     data = request.json
+    webserver.logger.info(f"Received request: {data}")
 
-    job = webserver.data_ingestor.global_mean(data['question'])
-    webserver.tasks_runner.add_task(job, webserver.job_counter)
-    webserver.job_counter += 1
+    try:
+        job = webserver.data_ingestor.global_mean(data['question'])
+        webserver.tasks_runner.add_task(job, webserver.job_counter)
+        webserver.job_counter += 1
+    except KeyError as e:
+        webserver.logger.error(f"Invalid format of {data}")
+        return jsonify({"status": "error", "reason": f"Invalid format of {data}"})
 
+    webserver.logger.info(f"Job {webserver.job_counter - 1} added to the queue")
     return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
 
 
@@ -127,11 +159,17 @@ def diff_from_mean_request():
     '''
     # Get request data
     data = request.json
+    webserver.logger.info(f"Received request: {data}")
 
-    job = webserver.data_ingestor.diff_from_mean(data['question'])
-    webserver.tasks_runner.add_task(job, webserver.job_counter)
-    webserver.job_counter += 1
+    try:
+        job = webserver.data_ingestor.diff_from_mean(data['question'])
+        webserver.tasks_runner.add_task(job, webserver.job_counter)
+        webserver.job_counter += 1
+    except KeyError as e:
+        webserver.logger.error(f"Invalid format of {data}")
+        return jsonify({"status": "error", "reason": f"Invalid format of {data}"})
 
+    webserver.logger.info(f"Job {webserver.job_counter - 1} added to the queue")
     return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
 
 
@@ -142,11 +180,17 @@ def state_diff_from_mean_request():
     '''
     # Get request data
     data = request.json
+    webserver.logger.info(f"Received request: {data}")
 
-    job = webserver.data_ingestor.state_diff_from_mean(data['question'], data['state'])
-    webserver.tasks_runner.add_task(job, webserver.job_counter)
-    webserver.job_counter += 1
+    try:
+        job = webserver.data_ingestor.state_diff_from_mean(data['question'], data['state'])
+        webserver.tasks_runner.add_task(job, webserver.job_counter)
+        webserver.job_counter += 1
+    except KeyError as e:
+        webserver.logger.error(f"Invalid format of {data}")
+        return jsonify({"status": "error", "reason": f"Invalid format of {data}"})
 
+    webserver.logger.info(f"Job {webserver.job_counter - 1} added to the queue")
     return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
 
 
@@ -157,11 +201,17 @@ def mean_by_category_request():
     '''
     # Get request data
     data = request.json
+    webserver.logger.info(f"Received request: {data}")
 
-    job = webserver.data_ingestor.mean_by_category(data['question'])
-    webserver.tasks_runner.add_task(job, webserver.job_counter)
-    webserver.job_counter += 1
+    try:
+        job = webserver.data_ingestor.mean_by_category(data['question'])
+        webserver.tasks_runner.add_task(job, webserver.job_counter)
+        webserver.job_counter += 1
+    except KeyError as e:
+        webserver.logger.error(f"Invalid format of {data}")
+        return jsonify({"status": "error", "reason": f"Invalid format of {data}"})
 
+    webserver.logger.info(f"Job {webserver.job_counter - 1} added to the queue")
     return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
 
 
@@ -172,11 +222,17 @@ def state_mean_by_category_request():
     '''
     # Get request data
     data = request.json
+    webserver.logger.info(f"Received request: {data}")
 
-    job = webserver.data_ingestor.state_mean_by_category(data['question'], data['state'])
-    webserver.tasks_runner.add_task(job, webserver.job_counter)
-    webserver.job_counter += 1
+    try:
+        job = webserver.data_ingestor.state_mean_by_category(data['question'], data['state'])
+        webserver.tasks_runner.add_task(job, webserver.job_counter)
+        webserver.job_counter += 1
+    except KeyError as e:
+        webserver.logger.error(f"Invalid format of {data}")
+        return jsonify({"status": "error", "reason": f"Invalid format of {data}"})
 
+    webserver.logger.info(f"Job {webserver.job_counter - 1} added to the queue")
     return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
 
 
@@ -186,7 +242,30 @@ def graceful_shutdown():
         Gracefully shuts down the webserver
     '''
     webserver.tasks_runner.graceful_shutdown()
+    webserver.logger.info("Webserver shutdown")
     return jsonify({"status": "success"})
+
+
+@webserver.route('/api/jobs', methods=['GET'])
+def get_jobs():
+    '''
+        Returns the current status of all jobs
+    '''
+    webserver.logger.info("Getting jobs...")
+    jobs = webserver.tasks_runner.get_jobs()
+    webserver.logger.info("Got jobs status")
+    return jsonify({"status": "done", "jobs": jobs})
+
+
+@webserver.route('/api/num_jobs', methods=['GET'])
+def get_num_jobs():
+    '''
+        Returns the number of jobs in the queue
+    '''
+    webserver.logger.info("Getting number of jobs...")
+    num_jobs = webserver.tasks_runner.get_num_jobs()
+    webserver.logger.info("Got number of jobs")
+    return jsonify({"status": "done", "num_jobs": num_jobs})
 
 
 @webserver.route('/')
