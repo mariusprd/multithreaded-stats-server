@@ -1,3 +1,6 @@
+'''
+    This file contains the definition of the endpoints for the webserver.
+'''
 import json
 
 from flask import request, jsonify
@@ -46,26 +49,44 @@ def get_response(job_id):
     return jsonify({'status': 'done', 'data': res})
 
 
-@webserver.route('/api/states_mean', methods=['POST'])
-def states_mean_request():
+def post_wrapper(func: callable, state: bool = False):
     '''
-        Submit states_mean job to execution
+        Wrapper function that receives a function and a boolean state
+        indicating if the function requires a state parameter.
+        It returns a jsonified response with the job_id.
     '''
-    # Get request data
     data = request.json
     webserver.logger.info(f"Received request: {data}")
 
     # add task to execution
     try:
-        job = webserver.data_ingestor.states_mean(data['question'])
+        job = func(data['question'], data['state']) if state else func(data['question'])
         webserver.tasks_runner.add_task(job, webserver.job_counter)
         webserver.job_counter += 1
     except KeyError as e:
         webserver.logger.error(f"Invalid format of {data}")
-        return jsonify({"status": "error", "reason": f"Invalid format of {data}"})
+        return jsonify({"status": "error", "reason": f"Invalid format of {data} => {e}"})
 
     webserver.logger.info(f"Job {webserver.job_counter - 1} added to the queue")
     return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
+
+
+def method_not_allowed(url: str):
+    '''
+        Returns a Method Not Allowed error and logs it
+    '''
+    webserver.logger.error(f"Method not allowed for {url}")
+    return jsonify({"error": "Method not allowed"}), 405
+
+
+@webserver.route('/api/states_mean', methods=['POST'])
+def states_mean_request():
+    '''
+        Submit states_mean job to execution
+    '''
+    if request.method == 'POST':
+        return post_wrapper(webserver.data_ingestor.states_mean)
+    return method_not_allowed('/api/states_mean')
 
 
 @webserver.route('/api/state_mean', methods=['POST'])
@@ -73,21 +94,9 @@ def state_mean_request():
     '''
         Submit state_mean job to execution
     '''
-    # Get request data
-    data = request.json
-    webserver.logger.info(f"Received request: {data}")
-
-    # add task to execution
-    try:
-        job = webserver.data_ingestor.state_mean(data['question'], data['state'])
-        webserver.tasks_runner.add_task(job, webserver.job_counter)
-        webserver.job_counter += 1
-    except KeyError as e:
-        webserver.logger.error(f"Invalid format of {data}")
-        return jsonify({"status": "error", "reason": f"Invalid format of {data}"})
-
-    webserver.logger.info(f"Job {webserver.job_counter - 1} added to the queue")
-    return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
+    if request.method == 'POST':
+        return post_wrapper(webserver.data_ingestor.state_mean, state=True)
+    return method_not_allowed('/api/state_mean')
 
 
 @webserver.route('/api/best5', methods=['POST'])
@@ -95,19 +104,9 @@ def best5_request():
     '''
         Submit best5 job to execution
     '''
-    # Get request data
-    data = request.json
-    webserver.logger.info(f"Received request: {data}")
-
-    try:
-        job = webserver.data_ingestor.best5(data['question'])
-        webserver.tasks_runner.add_task(job, webserver.job_counter)
-        webserver.job_counter += 1
-    except KeyError as e:
-        webserver.logger.error(f"Invalid format of {data}")
-        return jsonify({"status": "error", "reason": f"Invalid format of {data}"})
-
-    return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
+    if request.method == 'POST':
+        return post_wrapper(webserver.data_ingestor.best5)
+    return method_not_allowed('/api/best5')
 
 
 @webserver.route('/api/worst5', methods=['POST'])
@@ -115,20 +114,9 @@ def worst5_request():
     '''
         Submit worst5 job to execution
     '''
-    # Get request data
-    data = request.json
-    webserver.logger.info(f"Received request: {data}")
-
-    try:
-        job = webserver.data_ingestor.worst5(data['question'])
-        webserver.tasks_runner.add_task(job, webserver.job_counter)
-        webserver.job_counter += 1
-    except KeyError as e:
-        webserver.logger.error(f"Invalid format of {data}")
-        return jsonify({"status": "error", "reason": f"Invalid format of {data}"})
-
-    webserver.logger.info(f"Job {webserver.job_counter - 1} added to the queue")
-    return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
+    if request.method == 'POST':
+        return post_wrapper(webserver.data_ingestor.worst5)
+    return method_not_allowed('/api/worst5')
 
 
 @webserver.route('/api/global_mean', methods=['POST'])
@@ -136,20 +124,9 @@ def global_mean_request():
     '''
         Submit global_mean job to execution
     '''
-    # Get request data
-    data = request.json
-    webserver.logger.info(f"Received request: {data}")
-
-    try:
-        job = webserver.data_ingestor.global_mean(data['question'])
-        webserver.tasks_runner.add_task(job, webserver.job_counter)
-        webserver.job_counter += 1
-    except KeyError as e:
-        webserver.logger.error(f"Invalid format of {data}")
-        return jsonify({"status": "error", "reason": f"Invalid format of {data}"})
-
-    webserver.logger.info(f"Job {webserver.job_counter - 1} added to the queue")
-    return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
+    if request.method == 'POST':
+        return post_wrapper(webserver.data_ingestor.global_mean)
+    return method_not_allowed('/api/global_mean')
 
 
 @webserver.route('/api/diff_from_mean', methods=['POST'])
@@ -157,20 +134,9 @@ def diff_from_mean_request():
     '''
         Submit diff_from_mean job to execution
     '''
-    # Get request data
-    data = request.json
-    webserver.logger.info(f"Received request: {data}")
-
-    try:
-        job = webserver.data_ingestor.diff_from_mean(data['question'])
-        webserver.tasks_runner.add_task(job, webserver.job_counter)
-        webserver.job_counter += 1
-    except KeyError as e:
-        webserver.logger.error(f"Invalid format of {data}")
-        return jsonify({"status": "error", "reason": f"Invalid format of {data}"})
-
-    webserver.logger.info(f"Job {webserver.job_counter - 1} added to the queue")
-    return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
+    if request.method == 'POST':
+        return post_wrapper(webserver.data_ingestor.diff_from_mean)
+    return method_not_allowed('/api/diff_from_mean')
 
 
 @webserver.route('/api/state_diff_from_mean', methods=['POST'])
@@ -178,20 +144,9 @@ def state_diff_from_mean_request():
     '''
         Submit state_diff_from_mean job to execution
     '''
-    # Get request data
-    data = request.json
-    webserver.logger.info(f"Received request: {data}")
-
-    try:
-        job = webserver.data_ingestor.state_diff_from_mean(data['question'], data['state'])
-        webserver.tasks_runner.add_task(job, webserver.job_counter)
-        webserver.job_counter += 1
-    except KeyError as e:
-        webserver.logger.error(f"Invalid format of {data}")
-        return jsonify({"status": "error", "reason": f"Invalid format of {data}"})
-
-    webserver.logger.info(f"Job {webserver.job_counter - 1} added to the queue")
-    return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
+    if request.method == 'POST':
+        return post_wrapper(webserver.data_ingestor.state_diff_from_mean, state=True)
+    return method_not_allowed('/api/state_diff_from_mean')
 
 
 @webserver.route('/api/mean_by_category', methods=['POST'])
@@ -199,20 +154,9 @@ def mean_by_category_request():
     '''
         Submit mean_by_category job to execution
     '''
-    # Get request data
-    data = request.json
-    webserver.logger.info(f"Received request: {data}")
-
-    try:
-        job = webserver.data_ingestor.mean_by_category(data['question'])
-        webserver.tasks_runner.add_task(job, webserver.job_counter)
-        webserver.job_counter += 1
-    except KeyError as e:
-        webserver.logger.error(f"Invalid format of {data}")
-        return jsonify({"status": "error", "reason": f"Invalid format of {data}"})
-
-    webserver.logger.info(f"Job {webserver.job_counter - 1} added to the queue")
-    return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
+    if request.method == 'POST':
+        return post_wrapper(webserver.data_ingestor.mean_by_category)
+    return method_not_allowed('/api/mean_by_category')
 
 
 @webserver.route('/api/state_mean_by_category', methods=['POST'])
@@ -220,20 +164,9 @@ def state_mean_by_category_request():
     '''
         Submit state_mean_by_category job to execution
     '''
-    # Get request data
-    data = request.json
-    webserver.logger.info(f"Received request: {data}")
-
-    try:
-        job = webserver.data_ingestor.state_mean_by_category(data['question'], data['state'])
-        webserver.tasks_runner.add_task(job, webserver.job_counter)
-        webserver.job_counter += 1
-    except KeyError as e:
-        webserver.logger.error(f"Invalid format of {data}")
-        return jsonify({"status": "error", "reason": f"Invalid format of {data}"})
-
-    webserver.logger.info(f"Job {webserver.job_counter - 1} added to the queue")
-    return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
+    if request.method == 'POST':
+        return post_wrapper(webserver.data_ingestor.state_mean_by_category, state=True)
+    return method_not_allowed('/api/state_mean_by_category')
 
 
 @webserver.route('/api/graceful_shutdown', methods=['GET'])

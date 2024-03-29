@@ -1,3 +1,6 @@
+'''
+    This module is responsible for managing the task execution in a thread pool.
+'''
 import os
 from queue import Queue
 from threading import Thread, Event
@@ -32,7 +35,7 @@ class ThreadPool:
             os.makedirs("./results")
 
 
-    def add_task(self, task, job_id) -> int:
+    def add_task(self, task: callable, job_id: int) -> int:
         '''adds task to queue and task_state'''
         self.task_queue.put((task, job_id))
         self.task_state[f"job_id_{job_id}"] = "running"
@@ -58,11 +61,11 @@ class ThreadPool:
         # remove the results directory
         os.rmdir("./results")
 
-    def is_valid(self, job_id) -> bool:
+    def is_valid(self, job_id: int) -> bool:
         '''Checks if job_id is valid'''
         return f"job_id_{job_id}" in self.task_state
 
-    def is_done(self, job_id) -> bool:
+    def is_done(self, job_id: int) -> bool:
         '''Checks if job is done'''
         return self.task_state[f"job_id_{job_id}"] == "done"
 

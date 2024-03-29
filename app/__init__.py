@@ -31,6 +31,4 @@ webserver.data_path = "./nutrition_activity_obesity_usa_subset.csv"
 webserver.data_ingestor = DataIngestor(webserver.data_path, webserver.tasks_runner.data_loaded)
 webserver.job_counter = 1
 
-
-
 from app import routes

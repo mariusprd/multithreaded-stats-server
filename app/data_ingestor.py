@@ -1,3 +1,6 @@
+'''
+    This module is responsible for reading the dataset and providing methods for statistics.
+'''
 import json
 from threading import Event
 import pandas as pd
@@ -31,7 +34,7 @@ class DataIngestor:
         ]
 
 
-    def global_mean(self, question: str) -> str:
+    def global_mean(self, question: str):
         '''
             Receives a question (from the set of questions above) and calculates the average
             of the recorded values (Data_Value) from the total time interval (2011-2022)
@@ -44,7 +47,7 @@ class DataIngestor:
         return inner
 
 
-    def states_mean(self, question: str) -> str:
+    def states_mean(self, question: str):
         '''
             Receives a question (from the set of questions above) and calculates the average
             of the recorded values (Data_Value) from the total time interval (2011-2022)
@@ -63,7 +66,7 @@ class DataIngestor:
         return inner
 
 
-    def state_mean(self, question: str, state: str) -> str:
+    def state_mean(self, question: str, state: str):
         '''
             Receives a question (from the set of questions above) and a state, and calculates
             the average of the recorded values (Data_Value) from the total time interval
@@ -82,7 +85,7 @@ class DataIngestor:
         return inner
 
 
-    def best5(self, question: str) -> str:
+    def best5(self, question: str):
         '''
             Receives a question (from the set of questions above) and calculates the average
             of the recorded values (Data_Value) from the total time interval (2011-2022)
@@ -102,7 +105,7 @@ class DataIngestor:
         return inner
 
 
-    def worst5(self, question: str) -> str:
+    def worst5(self, question: str):
         '''
             Receives a question (from the set of questions above) and calculates the average
             of the recorded values (Data_Value) from the total time interval (2011-2022)
@@ -122,7 +125,7 @@ class DataIngestor:
         return inner
 
 
-    def diff_from_mean(self, question: str) -> str:
+    def diff_from_mean(self, question: str):
         '''
             Receives a question (from the set of questions above) and calculates the difference
             between the global mean and the mean of each state.
@@ -142,7 +145,7 @@ class DataIngestor:
         return inner
 
 
-    def state_diff_from_mean(self, question: str, state: str) -> str:
+    def state_diff_from_mean(self, question: str, state: str):
         '''
             Receives a question (from the set of questions above) and a state, and calculates
             the difference between the global mean and the mean of the state.
@@ -162,7 +165,7 @@ class DataIngestor:
         return inner
 
 
-    def state_mean_by_category(self, question: str, state: str) -> str:
+    def state_mean_by_category(self, question: str, state: str):
         '''
             Receives a question (from the set of questions above) and a state, and calculates
             the average value for each segment (Stratification1)
@@ -183,7 +186,7 @@ class DataIngestor:
         return inner
 
 
-    def mean_by_category(self, question: str) -> str:
+    def mean_by_category(self, question: str):
         '''
             Receives a question (from the set of questions above) and calculates the average value
             for each segment (Stratification1) from the categories (StratificationCategory1)
