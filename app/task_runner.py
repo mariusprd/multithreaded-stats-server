@@ -37,6 +37,9 @@ class ThreadPool:
 
     def add_task(self, task: callable, job_id: int) -> int:
         '''adds task to queue and task_state'''
+        if not all(self.threads[i].is_alive() for i in range(self.num_of_threads)):
+            return -1
+
         self.task_queue.put((task, job_id))
         self.task_state[f"job_id_{job_id}"] = "running"
 
@@ -52,6 +55,9 @@ class ThreadPool:
 
     def graceful_shutdown(self) -> None:
         '''ThreadPool shutdown'''
+        if not all(self.threads[i].is_alive() for i in range(self.num_of_threads)):
+            return
+
         for thread in self.threads:
             self.task_queue.put((None, None))
 
