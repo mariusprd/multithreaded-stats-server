@@ -74,105 +74,103 @@ def post_wrapper(func: callable, state: bool = False):
     return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
 
 
-def method_not_allowed(url: str):
+def verify_request_decorator(allowed_method='POST'):
     '''
-        Returns a Method Not Allowed error and logs it
+        Decorator that verifies the request method
     '''
-    webserver.logger.error(f"Method not allowed for {url}")
-    return jsonify({"error": "Method not allowed"}), 405
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            if request.method == allowed_method:
+                return func(*args, **kwargs)
+            webserver.logger.error(f"Method not allowed for {request.url}")
+            return jsonify({"error": "Method not allowed"}), 405
+        return wrapper
+    return decorator
 
 
-@webserver.route('/api/states_mean', methods=['POST'])
+@webserver.route('/api/states_mean', methods=['POST'], endpoint='states_mean')
+@verify_request_decorator()
 def states_mean_request():
     '''
         Submit states_mean job to execution
     '''
-    if request.method == 'POST':
-        return post_wrapper(webserver.data_ingestor.states_mean)
-    return method_not_allowed('/api/states_mean')
+    return post_wrapper(webserver.data_ingestor.states_mean)
 
 
-@webserver.route('/api/state_mean', methods=['POST'])
+@webserver.route('/api/state_mean', methods=['POST'], endpoint='state_mean')
+@verify_request_decorator()
 def state_mean_request():
     '''
         Submit state_mean job to execution
     '''
-    if request.method == 'POST':
-        return post_wrapper(webserver.data_ingestor.state_mean, state=True)
-    return method_not_allowed('/api/state_mean')
+    return post_wrapper(webserver.data_ingestor.state_mean, state=True)
 
 
-@webserver.route('/api/best5', methods=['POST'])
+@webserver.route('/api/best5', methods=['POST'], endpoint='best5')
+@verify_request_decorator()
 def best5_request():
     '''
         Submit best5 job to execution
     '''
-    if request.method == 'POST':
-        return post_wrapper(webserver.data_ingestor.best5)
-    return method_not_allowed('/api/best5')
+    return post_wrapper(webserver.data_ingestor.best5)
 
 
-@webserver.route('/api/worst5', methods=['POST'])
+@webserver.route('/api/worst5', methods=['POST'], endpoint='worst5')
+@verify_request_decorator()
 def worst5_request():
     '''
         Submit worst5 job to execution
     '''
-    if request.method == 'POST':
-        return post_wrapper(webserver.data_ingestor.worst5)
-    return method_not_allowed('/api/worst5')
+    return post_wrapper(webserver.data_ingestor.worst5)
 
 
-@webserver.route('/api/global_mean', methods=['POST'])
+@webserver.route('/api/global_mean', methods=['POST'], endpoint='global_mean')
+@verify_request_decorator()
 def global_mean_request():
     '''
         Submit global_mean job to execution
     '''
-    if request.method == 'POST':
-        return post_wrapper(webserver.data_ingestor.global_mean)
-    return method_not_allowed('/api/global_mean')
+    return post_wrapper(webserver.data_ingestor.global_mean)
 
 
-@webserver.route('/api/diff_from_mean', methods=['POST'])
+@webserver.route('/api/diff_from_mean', methods=['POST'], endpoint='diff_from_mean')
+@verify_request_decorator()
 def diff_from_mean_request():
     '''
         Submit diff_from_mean job to execution
     '''
-    if request.method == 'POST':
-        return post_wrapper(webserver.data_ingestor.diff_from_mean)
-    return method_not_allowed('/api/diff_from_mean')
+    return post_wrapper(webserver.data_ingestor.diff_from_mean)
 
 
-@webserver.route('/api/state_diff_from_mean', methods=['POST'])
+@webserver.route('/api/state_diff_from_mean', methods=['POST'], endpoint='state_diff_from_mean')
+@verify_request_decorator()
 def state_diff_from_mean_request():
     '''
         Submit state_diff_from_mean job to execution
     '''
-    if request.method == 'POST':
-        return post_wrapper(webserver.data_ingestor.state_diff_from_mean, state=True)
-    return method_not_allowed('/api/state_diff_from_mean')
+    return post_wrapper(webserver.data_ingestor.state_diff_from_mean, state=True)
 
 
-@webserver.route('/api/mean_by_category', methods=['POST'])
+@webserver.route('/api/mean_by_category', methods=['POST'], endpoint='mean_by_category')
+@verify_request_decorator()
 def mean_by_category_request():
     '''
         Submit mean_by_category job to execution
     '''
-    if request.method == 'POST':
-        return post_wrapper(webserver.data_ingestor.mean_by_category)
-    return method_not_allowed('/api/mean_by_category')
+    return post_wrapper(webserver.data_ingestor.mean_by_category)
 
 
-@webserver.route('/api/state_mean_by_category', methods=['POST'])
+@webserver.route('/api/state_mean_by_category', methods=['POST'], endpoint='state_mean_by_category')
+@verify_request_decorator()
 def state_mean_by_category_request():
     '''
         Submit state_mean_by_category job to execution
     '''
-    if request.method == 'POST':
-        return post_wrapper(webserver.data_ingestor.state_mean_by_category, state=True)
-    return method_not_allowed('/api/state_mean_by_category')
+    return post_wrapper(webserver.data_ingestor.state_mean_by_category, state=True)
 
 
-@webserver.route('/api/graceful_shutdown', methods=['GET'])
+@webserver.route('/api/graceful_shutdown', methods=['GET'], endpoint='graceful_shutdown')
+@verify_request_decorator('GET')
 def graceful_shutdown():
     '''
         Gracefully shuts down the webserver
@@ -182,7 +180,8 @@ def graceful_shutdown():
     return jsonify({"status": "success"})
 
 
-@webserver.route('/api/jobs', methods=['GET'])
+@webserver.route('/api/jobs', methods=['GET'], endpoint='jobs')
+@verify_request_decorator('GET')
 def get_jobs():
     '''
         Returns the current status of all jobs
@@ -193,7 +192,8 @@ def get_jobs():
     return jsonify({"status": "done", "jobs": jobs})
 
 
-@webserver.route('/api/num_jobs', methods=['GET'])
+@webserver.route('/api/num_jobs', methods=['GET'], endpoint='num_jobs')
+@verify_request_decorator('GET')
 def get_num_jobs():
     '''
         Returns the number of jobs in the queue
