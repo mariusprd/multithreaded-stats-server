@@ -1,7 +1,11 @@
+'''
+    This file is the entry point for the Flask application.
+    It initializes the Flask app, sets up logging, and imports the routes.
+'''
 import logging
 import time
-from logging.handlers import RotatingFileHandler
 
+from logging.handlers import RotatingFileHandler
 from flask import Flask
 from app.data_ingestor import DataIngestor
 from app.task_runner import ThreadPool
@@ -13,6 +17,7 @@ logging.Formatter.converter = time.gmtime
 
 logger = logging.getLogger("webserver_logger")
 logger.setLevel(logging.INFO)
+
 handler = RotatingFileHandler("webserver.log", maxBytes=20000, backupCount=5)
 handler.setLevel(logging.INFO)
 
@@ -20,7 +25,6 @@ formatter = logging.Formatter('%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:
 handler.setFormatter(formatter)
 
 logger.addHandler(handler)
-
 webserver.logger = logger
 
 webserver.tasks_runner = ThreadPool()

@@ -58,18 +58,18 @@ def post_wrapper(func: callable, state: bool = False):
     data = request.json
     webserver.logger.info(f"Received request: {data}")
 
-    # add task to execution
     try:
         job = func(data['question'], data['state']) if state else func(data['question'])
-        if webserver.tasks_runner.add_task(job, webserver.job_counter) == -1:
-            webserver.logger.error("Thread pool is shutting down or already shut down.")
-            return jsonify({"status": "error", "reason": "Thread pool was shut down."})
-
-        webserver.job_counter += 1
     except KeyError as e:
         webserver.logger.error(f"Invalid format of {data}")
         return jsonify({"status": "error", "reason": f"Invalid format of {data} => {e}"})
 
+    # try to add the task to be executed
+    if webserver.tasks_runner.add_task(job, webserver.job_counter) == -1:
+        webserver.logger.error("Thread pool is shutting down or already shut down.")
+        return jsonify({"status": "error", "reason": "Thread pool was shut down."})
+
+    webserver.job_counter += 1
     webserver.logger.info(f"Job {webserver.job_counter - 1} added to the queue")
     return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
 
