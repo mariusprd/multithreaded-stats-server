@@ -6,50 +6,22 @@ import json
 from flask import request, jsonify
 from app import webserver
 
-# Example endpoint definition
-@webserver.route('/api/post_endpoint', methods=['POST'])
-def post_endpoint():
+
+def verify_request_decorator(allowed_method):
     '''
-        Example POST endpoint that receives JSON data and returns a JSON response
+        Decorator that verifies the request method
     '''
-    if request.method == 'POST':
-        # Assuming the request contains JSON data
-        data = request.json
-        print(f"got data in post {data}")
-
-        # Process the received data
-        # For demonstration purposes, just echoing back the received data
-        response = {"message": "Received data successfully", "data": data}
-
-        # Sending back a JSON response
-        return jsonify(response)
-    # Method Not Allowed
-    return jsonify({"error": "Method not allowed"}), 405
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            if request.method == allowed_method:
+                return func(*args, **kwargs)
+            webserver.logger.error(f"Method not allowed for {request.url}")
+            return jsonify({"error": "Method not allowed"}), 405
+        return wrapper
+    return decorator
 
 
-@webserver.route('/api/get_results/<job_id>', methods=['GET'])
-def get_response(job_id):
-    '''
-        Returns the result of a job given a job_id
-    '''
-    webserver.logger.info(f"Getting response for job_id: {job_id}")
-
-    if not webserver.tasks_runner.is_valid(job_id):
-        webserver.logger.error(f"Invalid job_id: {job_id}")
-        return jsonify({'status': 'error', 'reason': 'Invalid job_id'})
-
-    if not webserver.tasks_runner.is_done(job_id):
-        webserver.logger.info(f"Job {job_id} is still running")
-        return jsonify({'status': 'running'})
-
-    with open(f"./results/job_{job_id}", "r", encoding="utf-8") as f:
-        res = json.loads(f.read())
-
-    webserver.logger.info(f"Returning response for job_id: {job_id}")
-    return jsonify({'status': 'done', 'data': res})
-
-
-def post_wrapper(func: callable, state: bool = False):
+def post_wrapper(func: callable, state: bool=False):
     '''
         Wrapper function that receives a function and a boolean state
         indicating if the function requires a state parameter.
@@ -74,22 +46,51 @@ def post_wrapper(func: callable, state: bool = False):
     return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
 
 
-def verify_request_decorator(allowed_method='POST'):
+@webserver.route('/api/post_endpoint', methods=['POST'])
+def post_endpoint():
     '''
-        Decorator that verifies the request method
+        Example POST endpoint that receives JSON data and returns a JSON response
     '''
-    def decorator(func):
-        def wrapper(*args, **kwargs):
-            if request.method == allowed_method:
-                return func(*args, **kwargs)
-            webserver.logger.error(f"Method not allowed for {request.url}")
-            return jsonify({"error": "Method not allowed"}), 405
-        return wrapper
-    return decorator
+    if request.method == 'POST':
+        # Assuming the request contains JSON data
+        data = request.json
+        print(f"got data in post {data}")
+
+        # Process the received data
+        # For demonstration purposes, just echoing back the received data
+        response = {"message": "Received data successfully", "data": data}
+
+        # Sending back a JSON response
+        return jsonify(response)
+    # Method Not Allowed
+    return jsonify({"error": "Method not allowed"}), 405
+
+
+@webserver.route('/api/get_results/<job_id>', methods=['GET'])
+@verify_request_decorator('GET')
+def get_response(job_id):
+    '''
+        Returns the result of a job given a job_id
+    '''
+    webserver.logger.info(f"Getting response for job_id: {job_id}")
+
+    if not webserver.tasks_runner.is_valid(job_id):
+        webserver.logger.error(f"Invalid job_id: {job_id}")
+        return jsonify({'status': 'error', 'reason': 'Invalid job_id'})
+
+    if not webserver.tasks_runner.is_done(job_id):
+        webserver.logger.info(f"Job {job_id} is still running")
+        return jsonify({'status': 'running'})
+
+    with open(f"./results/job_{job_id}", "r", encoding="utf-8") as f:
+        res = json.loads(f.read())
+
+    webserver.logger.info(f"Returning response for job_id: {job_id}")
+    return jsonify({'status': 'done', 'data': res})
 
 
 @webserver.route('/api/states_mean', methods=['POST'], endpoint='states_mean')
-@verify_request_decorator()
+@verify_request_decorator('POST')
 def states_mean_request():
     '''
         Submit states_mean job to execution
@@ -98,7 +99,7 @@ def states_mean_request():
 
 
 @webserver.route('/api/state_mean', methods=['POST'], endpoint='state_mean')
-@verify_request_decorator()
+@verify_request_decorator('POST')
 def state_mean_request():
     '''
         Submit state_mean job to execution
@@ -107,7 +108,7 @@ def state_mean_request():
 
 
 @webserver.route('/api/best5', methods=['POST'], endpoint='best5')
-@verify_request_decorator()
+@verify_request_decorator('POST')
 def best5_request():
     '''
         Submit best5 job to execution
@@ -116,7 +117,7 @@ def best5_request():
 
 
 @webserver.route('/api/worst5', methods=['POST'], endpoint='worst5')
-@verify_request_decorator()
+@verify_request_decorator('POST')
 def worst5_request():
     '''
         Submit worst5 job to execution
@@ -125,7 +126,7 @@ def worst5_request():
 
 
 @webserver.route('/api/global_mean', methods=['POST'], endpoint='global_mean')
-@verify_request_decorator()
+@verify_request_decorator('POST')
 def global_mean_request():
     '''
         Submit global_mean job to execution
@@ -134,7 +135,7 @@ def global_mean_request():
 
 
 @webserver.route('/api/diff_from_mean', methods=['POST'], endpoint='diff_from_mean')
-@verify_request_decorator()
+@verify_request_decorator('POST')
 def diff_from_mean_request():
     '''
         Submit diff_from_mean job to execution
@@ -143,7 +144,7 @@ def diff_from_mean_request():
 
 
 @webserver.route('/api/state_diff_from_mean', methods=['POST'], endpoint='state_diff_from_mean')
-@verify_request_decorator()
+@verify_request_decorator('POST')
 def state_diff_from_mean_request():
     '''
         Submit state_diff_from_mean job to execution
@@ -152,7 +153,7 @@ def state_diff_from_mean_request():
 
 
 @webserver.route('/api/mean_by_category', methods=['POST'], endpoint='mean_by_category')
-@verify_request_decorator()
+@verify_request_decorator('POST')
 def mean_by_category_request():
     '''
         Submit mean_by_category job to execution
@@ -161,7 +162,7 @@ def mean_by_category_request():
 
 
 @webserver.route('/api/state_mean_by_category', methods=['POST'], endpoint='state_mean_by_category')
-@verify_request_decorator()
+@verify_request_decorator('POST')
 def state_mean_by_category_request():
     '''
         Submit state_mean_by_category job to execution
