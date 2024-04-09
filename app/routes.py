@@ -15,7 +15,7 @@ def verify_request_decorator(allowed_method):
         def wrapper(*args, **kwargs):
             if request.method == allowed_method:
                 return func(*args, **kwargs)
-            webserver.logger.error(f"Method not allowed for {request.url}")
+            webserver.logger.error("Method not allowed for %s", request.url)
             return jsonify({"error": "Method not allowed"}), 405
         return wrapper
     return decorator
@@ -28,12 +28,12 @@ def post_wrapper(func: callable, state: bool=False):
         It returns a jsonified response with the job_id.
     '''
     data = request.json
-    webserver.logger.info(f"Received request: {data}")
+    webserver.logger.info("Received request: %s", data)
 
     try:
         job = func(data['question'], data['state']) if state else func(data['question'])
     except KeyError as e:
-        webserver.logger.error(f"Invalid format of {data}")
+        webserver.logger.error("Invalid format of %s", data)
         return jsonify({"status": "error", "reason": f"Invalid format of {data} => {e}"})
 
     # try to add the task to be executed
@@ -42,7 +42,7 @@ def post_wrapper(func: callable, state: bool=False):
         return jsonify({"status": "error", "reason": "Thread pool was shut down."})
 
     webserver.job_counter += 1
-    webserver.logger.info(f"Job {webserver.job_counter - 1} added to the queue")
+    webserver.logger.info("Job %s added to the queue", {webserver.job_counter - 1})
     return jsonify({"status": "success", "job_id": webserver.job_counter - 1})
 
 
@@ -72,20 +72,20 @@ def get_response(job_id):
     '''
         Returns the result of a job given a job_id
     '''
-    webserver.logger.info(f"Getting response for job_id: {job_id}")
+    webserver.logger.info("Getting response for job_id: %s", job_id)
 
     if not webserver.tasks_runner.is_valid(job_id):
-        webserver.logger.error(f"Invalid job_id: {job_id}")
+        webserver.logger.error("Invalid job_id: %s", job_id)
         return jsonify({'status': 'error', 'reason': 'Invalid job_id'})
 
     if not webserver.tasks_runner.is_done(job_id):
-        webserver.logger.info(f"Job {job_id} is still running")
+        webserver.logger.info("Job %s is still running", job_id)
         return jsonify({'status': 'running'})
 
     with open(f"./results/job_{job_id}", "r", encoding="utf-8") as f:
         res = json.loads(f.read())
 
-    webserver.logger.info(f"Returning response for job_id: {job_id}")
+    webserver.logger.info("Returning response for job_id: %s", job_id)
     return jsonify({'status': 'done', 'data': res})
 
 

@@ -120,7 +120,6 @@ class DataIngestor:
                 .sort_values(ascending=ascending)
                 .head(5)
             )
-            print(f"==================\n{json.dumps(res.to_dict())}\n =====================\n")
             return json.dumps(res.to_dict())
 
         return inner
@@ -181,8 +180,8 @@ class DataIngestor:
                 ['Data_Value'].mean()
                 .to_dict()
             )
-            res = {str(tuple([k1, k2])): v for (k1, k2), v in res.items()}
-            return json.dumps({state: json.dumps(res)})
+            res = {str(k) : v for k, v in res.items()}
+            return json.dumps({state: res})
 
         return inner
 
