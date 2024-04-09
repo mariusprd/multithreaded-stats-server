@@ -1,5 +1,7 @@
 pandas
+numpy
 flask
 requests
 deepdiff
+pylint
 pandas
