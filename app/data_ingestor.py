@@ -120,6 +120,7 @@ class DataIngestor:
                 .sort_values(ascending=ascending)
                 .head(5)
             )
+            print(f"==================\n{json.dumps(res.to_dict())}\n =====================\n")
             return json.dumps(res.to_dict())
 
         return inner
