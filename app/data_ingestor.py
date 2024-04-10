@@ -11,12 +11,13 @@ class DataIngestor:
         This class is responsible for reading the dataset and providing methods
         to calculate statistics.
     '''
-    def __init__(self, csv_path: str, data_loaded: Event):
+    def __init__(self, csv_path: str, data_loaded: Event = None):
         self.data_loaded = data_loaded
 
         # Read csv from csv_path
         self.data = pd.read_csv(csv_path)
-        self.data_loaded.set()
+        if self.data_loaded is not None:
+            self.data_loaded.set()
 
         self.questions_best_is_min = [
             'Percent of adults aged 18 years and older who have an overweight classification',
@@ -40,11 +41,11 @@ class DataIngestor:
             of the recorded values (Data_Value) from the total time interval (2011-2022)
             from the entire dataset.
         '''
-        def inner():
+        def inner_global_mean():
             res =  self.data[self.data['Question'] == question]['Data_Value'].mean()
             return json.dumps({"global_mean": res})
 
-        return inner
+        return inner_global_mean
 
 
     def states_mean(self, question: str):
@@ -53,7 +54,7 @@ class DataIngestor:
             of the recorded values (Data_Value) from the total time interval (2011-2022)
             for each state, and sorts them in ascending order by mean.
         '''
-        def inner():
+        def inner_states_mean():
             ascending = question in self.questions_best_is_min
             res = (
                 self.data[self.data['Question'] == question]
@@ -63,7 +64,7 @@ class DataIngestor:
             )
             return json.dumps(res.to_dict())
 
-        return inner
+        return inner_states_mean
 
 
     def state_mean(self, question: str, state: str):
@@ -72,7 +73,7 @@ class DataIngestor:
             the average of the recorded values (Data_Value) from the total time interval
             (2011-2022).
         '''
-        def inner():
+        def inner_state_mean():
             res = (
                 self.data[
                     (self.data['Question'] == question) &
@@ -82,7 +83,7 @@ class DataIngestor:
             )
             return json.dumps({state: res})
 
-        return inner
+        return inner_state_mean
 
 
     def best5(self, question: str):
@@ -91,7 +92,7 @@ class DataIngestor:
             of the recorded values (Data_Value) from the total time interval (2011-2022)
             and returns the top 5 states.
         '''
-        def inner():
+        def inner_best5():
             ascending = question in self.questions_best_is_min
             res = (
                 self.data[self.data['Question'] == question]
@@ -102,7 +103,7 @@ class DataIngestor:
             )
             return json.dumps(res.to_dict())
 
-        return inner
+        return inner_best5
 
 
     def worst5(self, question: str):
@@ -111,7 +112,7 @@ class DataIngestor:
             of the recorded values (Data_Value) from the total time interval (2011-2022)
             and returns the last 5 states.
         '''
-        def inner():
+        def inner_worst5():
             ascending = question in self.questions_best_is_max
             res = (
                 self.data[self.data['Question'] == question]
@@ -122,7 +123,7 @@ class DataIngestor:
             )
             return json.dumps(res.to_dict())
 
-        return inner
+        return inner_worst5
 
 
     def diff_from_mean(self, question: str):
@@ -130,7 +131,7 @@ class DataIngestor:
             Receives a question (from the set of questions above) and calculates the difference
             between the global mean and the mean of each state.
         '''
-        def inner():
+        def inner_diff_from_mean():
             ascending = question in self.questions_best_is_min
             global_mean = self.data[self.data['Question'] == question]['Data_Value'].mean()
             states_mean =  (
@@ -142,7 +143,7 @@ class DataIngestor:
             res = global_mean - states_mean
             return json.dumps(res.to_dict())
 
-        return inner
+        return inner_diff_from_mean
 
 
     def state_diff_from_mean(self, question: str, state: str):
@@ -150,7 +151,7 @@ class DataIngestor:
             Receives a question (from the set of questions above) and a state, and calculates
             the difference between the global mean and the mean of the state.
         '''
-        def inner():
+        def inner_state_diff_from_mean():
             global_mean = self.data[self.data['Question'] == question]['Data_Value'].mean()
             state_mean = (
                 self.data[
@@ -162,7 +163,7 @@ class DataIngestor:
             res = global_mean - state_mean
             return json.dumps({state: res})
 
-        return inner
+        return inner_state_diff_from_mean
 
 
     def state_mean_by_category(self, question: str, state: str):
@@ -171,7 +172,7 @@ class DataIngestor:
             the average value for each segment (Stratification1)
             from the categories (StratificationCategory1).
         '''
-        def inner():
+        def inner_state_mean_by_category():
             res = (
                 self.data[
                     (self.data['Question'] == question) &
@@ -183,7 +184,7 @@ class DataIngestor:
             res = {str(k) : v for k, v in res.items()}
             return json.dumps({state: res})
 
-        return inner
+        return inner_state_mean_by_category
 
 
     def mean_by_category(self, question: str):
@@ -192,7 +193,7 @@ class DataIngestor:
             for each segment (Stratification1) from the categories (StratificationCategory1)
             of each state.
         '''
-        def inner():
+        def inner_mean_by_category():
             res = (
                 self.data[(self.data['Question'] == question)]
                 .groupby(['LocationDesc', 'StratificationCategory1', 'Stratification1'])
@@ -202,4 +203,4 @@ class DataIngestor:
             )
             return json.dumps({str(tuple([k0, k1, k2])): v for (k0, k1, k2), v in res.items()})
 
-        return inner
+        return inner_mean_by_category

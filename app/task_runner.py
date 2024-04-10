@@ -24,6 +24,7 @@ class ThreadPool:
         self.task_state = {}
         self.task_queue = Queue()
 
+        # create and start the threads
         self.threads = [
             TaskRunner(i, self.task_queue, self.task_state, self.data_loaded)
             for i in range(self.num_of_threads)

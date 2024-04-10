@@ -1,153 +1,120 @@
 '''
-    This file contains the unit tests for the webserver
+    This file is used to test the data statistics functions
 '''
-from datetime import datetime
-from time import sleep
-import json
-import unittest
+import sys
 import os
-import requests
-from deepdiff import DeepDiff
 
-class TestWebserver(unittest.TestCase):
+# Add the parent directory to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from app.data_ingestor import DataIngestor
+
+import unittest
+
+# Initialize the data ingestor => This will load the data
+data_ingestor = DataIngestor("unittests/input/test_input.csv")
+
+# total score
+total_score = 0
+NUM_TESTS = 9
+
+class TestDataIngestor(unittest.TestCase):
     '''
-        This class contains the unit tests for the webserver
+        This class contains the unit tests for the data statistics functions
     '''
-    total_score = 0
-    NUM_TESTS = 5
-
-
-    def setUp(self):
-        os.system("rm -rf results/*")
-
-
-    def get_request(self, url: str):
+    def generic_test(self, func: callable, ref_file: str) -> None:
         '''
-            Sends a GET request to the webserver
+            Generic test function
         '''
-        return requests.get(f"http://127.0.0.1:5000{url}")
+        global total_score
+        res = func()
+        # print(f"Test name: {func.__name__}")
+        # print(res)
+        # print("-------------------\n")
+        with open(ref_file, "r", encoding="utf-8") as fin:
+            ref_data = fin.read()
 
-
-    def post_request(self, url: str, input_path: str):
-        '''
-            Sends a POST request to the webserver
-        '''
-        with open(input_path, "r", encoding="utf-8") as fin:
-            req_data = json.load(fin)
-
-        return requests.post(f"http://127.0.0.1:5000{url}", json=req_data)
-
-
-    def check_res_timeout(self, res_callable, ref_result, timeout_sec = 1, poll_interval = 0.2):
-        '''
-            Checks the response of a job until it is done or the timeout is reached
-            This function is copy pasted from checker.py
-        '''
-        initial_timestamp = datetime.now()
-        while True:
-            response = res_callable()
-            # print(response)
-
-            # Asserting that the response status code is 200 (OK)
-            self.assertEqual(response.status_code, 200)
-
-            # Asserting the response data
-            response_data = response.json()
-            # print(f"Response_data\n{response_data}")
-            if response_data['status'] == 'done':
-                # print(f"Response data {response_data['data']} and type {type(response_data['data'])}")
-                # print(f"Ref data {ref_result} and type {type(ref_result)}")
-                d = DeepDiff(response_data['data'], ref_result, math_epsilon=0.01)
-                self.assertTrue(d == {}, str(d))
-                break
-
-            if response_data['status'] == 'running':
-                current_timestamp = datetime.now()
-                time_delta = current_timestamp - initial_timestamp
-                if time_delta.seconds > timeout_sec:
-                    self.fail("Operation timedout")
-                else:
-                    sleep(poll_interval)
+        self.assertEqual(res, ref_data)
+        total_score += 1
 
 
     def test_global_mean(self):
         '''
-            Tests the global_mean endpoint
+            Test the global mean function
         '''
-        res = self.post_request("/api/global_mean", "tests/global_mean/input/in-1.json")
-        job_id = res.json()["job_id"]
-
-        with open("tests/global_mean/output/out-1.json", "r", encoding="utf-8") as f:
-            ref_res = json.load(f)
-
-        self.check_res_timeout(lambda: self.get_request(f"/api/get_results/{job_id}"), ref_res)
-        TestWebserver.total_score += 1
+        test_question = "Percent of adults aged 18 years and older who have obesity"
+        self.generic_test(data_ingestor.global_mean(question=test_question), "unittests/ref/global_mean.json")
 
 
-    def test_jobs(self):
+    def test_states_mean(self):
         '''
-            Tests the jobs endpoint
+            Test the states mean function
         '''
-        res = self.get_request("/api/jobs")
-        self.assertEqual(res.status_code, 200)
-
-        # open the unittests/output/ file and check the response
-        with open("unittests/output/jobs_after__global_mean.json", "r", encoding="utf-8") as f:
-            ref_res = json.load(f)
-        res = res.json()
-        d = DeepDiff(res, ref_res, math_epsilon=0.01)
-        self.assertTrue(d == {}, str(d))
-        TestWebserver.total_score += 1
+        test_question = "Percent of adults aged 18 years and older who have obesity"
+        self.generic_test(data_ingestor.states_mean(question=test_question), "unittests/ref/states_mean.json")
 
 
-    def test_num_jobs(self):
+    def test_state_mean(self):
         '''
-            Tests the num_jobs endpoint
+            Test the state mean function
         '''
-        res = self.get_request("/api/num_jobs")
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.json()["num_jobs"], 0)
-        TestWebserver.total_score += 1
+        test_question = "Percent of adults aged 18 years and older who have obesity"
+        test_state = "Alabama"
+        self.generic_test(data_ingestor.state_mean(question=test_question, state=test_state), "unittests/ref/state_mean.json")
 
 
-    def test_shutdown(self):
+    def test_best5(self):
         '''
-            Tests the shutdown endpoint
+            Test the best5 function
         '''
-        res = self.get_request("/api/graceful_shutdown")
-        self.assertEqual(res.status_code, 200)
-        TestWebserver.total_score += 1
+        test_question = "Percent of adults aged 18 years and older who have obesity"
+        self.generic_test(data_ingestor.best5(question=test_question), "unittests/ref/best5.json")
 
 
-    def test_after_shutdown(self):
+    def test_worst5(self):
         '''
-            Tests the jobs endpoint after shutdown
+            Test the worst5 function
         '''
-        # check if the a task can be added after shutdown
-        res = self.post_request("/api/global_mean", "tests/global_mean/input/in-1.json")
-        self.assertEqual(res.status_code, 200)
-        status = res.json()["status"]
-        self.assertEqual(status, "error")
-        TestWebserver.total_score += 1
+        test_question = "Percent of adults aged 18 years and older who have obesity"
+        self.generic_test(data_ingestor.worst5(question=test_question), "unittests/ref/worst5.json")
 
 
-    @staticmethod
-    def suite():
+    def test_diff_from_mean(self):
         '''
-            Returns the test suite for this module
+            Test the diff_from_mean function
         '''
-        suite = unittest.TestSuite()
-        suite.addTest(TestWebserver("test_global_mean"))
-        suite.addTest(TestWebserver("test_jobs"))
-        suite.addTest(TestWebserver("test_num_jobs"))
-        suite.addTest(TestWebserver("test_shutdown"))
-        suite.addTest(TestWebserver("test_after_shutdown"))
-        return suite
+        test_question = "Percent of adults aged 18 years and older who have obesity"
+        self.generic_test(data_ingestor.diff_from_mean(question=test_question), "unittests/ref/diff_from_mean.json")
+
+
+    def test_state_diff_from_mean(self):
+        '''
+            Test the state_diff_from_mean function
+        '''
+        test_question = "Percent of adults aged 18 years and older who have obesity"
+        test_state = "Alabama"
+        self.generic_test(data_ingestor.state_diff_from_mean(question=test_question, state=test_state), "unittests/ref/state_diff_from_mean.json")
+
+
+    def test_mean_by_category(self):
+        '''
+            Test the mean_by_category function
+        '''
+        test_question = "Percent of adults aged 18 years and older who have obesity"
+        test_state = "Alabama"
+        self.generic_test(data_ingestor.state_mean_by_category(question=test_question, state=test_state), "unittests/ref/mean_by_category.json")
+
+
+    def test_state_mean_by_category(self):
+        '''
+            Test the state_mean_by_category function
+        '''
+        test_question = "Percent of adults aged 18 years and older who have obesity"
+        test_state = "Alabama"
+        self.generic_test(data_ingestor.state_mean_by_category(question=test_question, state=test_state), "unittests/ref/state_mean_by_category.json")
 
 
 if __name__ == '__main__':
     try:
-        runner = unittest.TextTestRunner()
-        runner.run(TestWebserver.suite())
+        unittest.main(exit=False)
     finally:
-        print(f"TOTAL SCORE: {TestWebserver.total_score}/{TestWebserver.NUM_TESTS}")
+        print(f"Score: {total_score}/{NUM_TESTS}")

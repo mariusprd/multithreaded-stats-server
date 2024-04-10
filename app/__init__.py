@@ -10,29 +10,38 @@ from flask import Flask
 from app.data_ingestor import DataIngestor
 from app.task_runner import ThreadPool
 
-webserver = Flask(__name__)
+webserver = None
 
-# Set up logging
-logging.Formatter.converter = time.gmtime
+def create_app():
+    '''
+        This function creates the Flask app and sets up logging.
+    '''
+    global webserver
+    webserver = Flask(__name__, instance_relative_config=True)
 
-logger = logging.getLogger("webserver_logger")
-logger.setLevel(logging.INFO)
+    # Set up logging
+    logging.Formatter.converter = time.gmtime
 
-handler = RotatingFileHandler("webserver.log", maxBytes=20000, backupCount=5)
-handler.setLevel(logging.INFO)
+    logger = logging.getLogger("webserver_logger")
+    logger.setLevel(logging.INFO)
 
-formatter = logging.Formatter('%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S %Z')
-handler.setFormatter(formatter)
+    handler = RotatingFileHandler("webserver.log", maxBytes=20000, backupCount=5)
+    handler.setLevel(logging.INFO)
 
-logger.addHandler(handler)
-webserver.logger = logger
+    formatter = logging.Formatter('%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S %Z')
+    handler.setFormatter(formatter)
 
-webserver.tasks_runner = ThreadPool()
+    logger.addHandler(handler)
+    webserver.logger = logger
 
-# webserver.task_runner.start()
+    webserver.tasks_runner = ThreadPool()
 
-webserver.data_path = "./nutrition_activity_obesity_usa_subset.csv"
-webserver.data_ingestor = DataIngestor(webserver.data_path, webserver.tasks_runner.data_loaded)
-webserver.job_counter = 1
+    # webserver.task_runner.start()
 
-from app import routes
+    webserver.data_path = "./nutrition_activity_obesity_usa_subset.csv"
+    webserver.data_ingestor = DataIngestor(webserver.data_path, webserver.tasks_runner.data_loaded)
+    webserver.job_counter = 1
+
+    from app import routes
+
+    return webserver
