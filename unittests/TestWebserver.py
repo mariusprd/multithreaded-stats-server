@@ -27,9 +27,6 @@ class TestDataIngestor(unittest.TestCase):
         '''
         global total_score
         res = func()
-        # print(f"Test name: {func.__name__}")
-        # print(res)
-        # print("-------------------\n")
         with open(ref_file, "r", encoding="utf-8") as fin:
             ref_data = fin.read()
 
