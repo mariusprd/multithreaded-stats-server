@@ -19,7 +19,9 @@ la celelalte request uri in functie de ruta.
     -In folder ul unittests se afla si teste unitare pentru rutele neverificate de checker, dar care
 trebuie implementate conform enuntului.
     -Eventuale erori si date legate de ce se intampla in server sunt logate
-    -Elemente sincronizare: un event pentru semnalizarea ca datele au fost citite, Queue ->
+    -Elemente sincronizare: un event pentru semnalizarea ca datele au fost citite(nu este necesar in
+    cazul nostru, pentru ca se asteapta citirea datelor la pornirea server ului, dat necesar pentru
+    o aplicatie ce lucreaza cu un set mai mare de date, o aplicatie scalabila), Queue ->
 -> coada thread-safe
 
 * Utilitate *
